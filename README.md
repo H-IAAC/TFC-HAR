@@ -2,52 +2,53 @@
 # Self-Supervised Contrastive Pre-Training For Time Series via Time-Frequency Consistency
 
 #### Author: Nicolas Hecker
-#### Original Authors: [Xiang Zhang](http://xiangzhang.info/) (xiang.alan.zhang@gmail.com), [Ziyuan Zhao](https://github.com/mims-harvard/Raindrop)(ziyuanzhao@college.harvard.edu), <br/>
-####  [Theodoros Tsiligkaridis](https://github.com/mims-harvard/Raindrop)(ttsili@ll.mit.edu), [Marinka Zitnik](https://zitniklab.hms.harvard.edu/) (marinka@hms.harvard.edu)
-
-#### [Project website](https://zitniklab.hms.harvard.edu/projects/TF-C/)
 
 #### TF-C Original Paper: [NeurIPS 2022](https://openreview.net/forum?id=OJ4mMfGKLN), [Preprint](https://arxiv.org/abs/2206.08496)
 
 ## Overview 
 
-This repository contains eight processed datasets and the codes of developed TF-C pretraining model (along with baselines) for manuscript *Self-Supervised Contrastive Pre-Training For Time Series via Time-Frequency Consistency*. We propose TF-C, a novel pre-training approach for learning generalizable features that can be transferred across different time-series datasets. We evaluate TF-C on eight time series datasets with different sensor measurements and semantic meanings in four real-world application scenarios. The following illustration provides an overview of the idea behind and the broad applicability of our TF-C approach. The idea is shown in **(a)**: given a time series sample, time-based and frequency-based embeddings are made close to each other in a latent time-frequency space. The application scenarios are shown in **(b)**: leveraging TF-C in time series, we can generalize a pre-train models to diverse scenarios such as gesture recognition, fault detection, and seizure analysis.
-<!-- Then we fine-tune the models to a small, problem-specific dataset for performing time series classification tasks. -->
+This repository contains the code for training finetuning and testing the time-frequency consistency (TF-C) with convolutional neural networks (CNN) and UCI dataset (dataset made by "University of California, Irvine") with differents amounts of data. This work was published on Bracis (Belém - PA - Brasil 2024) conference.
 
-<p align="center">
-    <img src="images/fig1.png" width="1000" align="center">
-</p>
-
-
-
-<!-- Please consult our paper for more details about our model and the experiments. -->
-
+The technique is used for training a CNN model in a pretext unlabeled activity. After that the backbone of trained model is finetuned in a labeled activity of classification, where it is tested and have its metrics reported. This finetuned model is ready for inference for this downstream task.
 
 ## Key idea of TF-C
 
-Our model captures the generalizable property of time series, Time-Frequency Consistency (TF-C), in a large pre-training time series dataset. TF-C means the time-based representation and the frequency-based representation, which are learned from the same time series sample, are closer to each other in a joint time-frequency space, and farther apart if the representations are associated with different time series samples. By modeling the TF-C, which is a characteristic unique to time series, the developed model can capture the underlying common pattern in time series and further empower knowledge transfer across different time series datasets. The different time series datasets are compounded by complexity in terms of large variations of temporal dynamics across datasets, varying semantic meaning, irregular sampling, system factors (e.g., different devices or subjects), etc. 
-Moreover, the developed model enables self-supervised pre-training (which doesn't demand labels in the pre-training dataset) by adopting contrastive learning framework. Our TF-C approach is shown in the following figure. 
+The TF-C is a technique of self-supervised learning (SSL) mainly for time series problems based on a comparison of time domain with frequency domain. This comparison is called consistency and names the technique: Time and frequency consistency. Its archtecture for pre-training (the stage of SSL) is presented on figure below:
 
-
-<!-- See the following figure for an illustration of our TF-C approach. Please see our paper for details on the particular choices of encoder and projector networks, model hyperparameters, and component loss function. -->
-
-
-<!-- Specifically, we adopt contrastive learning in time space to generate a time-based
-67 representation.
-Our model is inspired by the well-known Fourier theorem used extensively in signal processing that states the equivalence between time domain and frequency domain representations of a continuous-time signal. We not only devised augmentations for time series in the time domain and in the frequency domain, but our contrastive loss has an additional term that requires the time- and frequency-domain embeddings be close to each other. Inspired by the triplet loss, we further specify that the similarity between the original time-frequency embedding pairs to be smaller than other possible pairs. We believe our model structure combined with the contrastive loss is sufficiently general to introduce inductive bias to the model that drives transfer learning across different time series domains.  -->
 
 <p align="center">
-    <img src="images/fig2.png" width="1000" align="center">
+    <img src="images/TFC.drawio.png" width="1000" align="center">
 </p>
 
-**Overview of TF-C approach.** our model has four components: a time encoder, a frequency encoder, and two cross-space projectors that map time-based and frequency-based representations, respectively, to the same time-frequency space. Together, the four components provide a way to embed the input time series to the latent time-frequency space such that time-based embedding and frequency-based embedding are close together. 
-The TF-C property is realized by promoting the alignment of time- and frequency-based representations in the latent time-frequency space, providing a vehicle for transferring the well-trained model to a target dataset not seen before.
+The first step is to get the dataset splited on batches.
 
+After, the Fast Fourier Transform (FFT) and other transformations (described bellow and in the article) are applied on each batch, producing augmented samples on time domain and frequency domain (the for blue arrows reaching the boxes "time pipeline" and "frequency pipeline").
 
+Next, the data are passed separately for the time encoder ($G_T$) producing the embbeding on first latent space $h_T$, from original time, and $\~{h_T}$, from augmented time; and the same for frequency, passing to the frequency encoder ($G_F$) producing $h_F$ and $\~{h_F}$. These data is used to obtain the time-loss and frequency-loss, used to optimize the model in the training stage.
+
+In following, the $h_s$ are passed to time projector ($R_T$) and frequency projector ($R_F$), to generate the embbedings $Z_T$ $\~{Z_T}$ $Z_F$ $\~{Z_F}$. These data in second latent space are used to obtain the consistency loss.
+
+All the losses consider only data on batch, not comparing samples with other batches. Augmented samples, or differents representations of same data are considered positive pair, and are approximated by loss function. Different samples augmentend or not, in time domain or not, are considered negative pairs, and are distanced each other by loss function in latent space.
+
+The model parts otimized by TF-C on this repository are shown on figures bellow.
+
+The time encoder and frequency encoder have the same archtecture:
+
+<p align="center">
+    <img src="images/TFC-encoder.drawio.png" width="1000" align="center">
+</p>
+
+The time projector and frequency projector have the same archtecture:
+
+<p align="center">
+    <img src="images/TFC-projector.drawio.png" width="1000" align="center">
+</p>
+
+THe process of training ...
 
 ## Datasets
 
-We prepared eight datasets for the four different scenarios that we used to compare our method against the baselines. The scenarios contain electrodiagnostic testing, human daily activity recognition, mechanical fault detection, and physical status monitoring. 
+
 
 ### Raw data
 
@@ -55,28 +56,14 @@ We prepared eight datasets for the four different scenarios that we used to comp
 
 (2). **Epilepsy** contains single-channel EEG measurements from 500 subjects. For each subject, the brain activity was recorded for 23.6 seconds. The dataset was then divided and shuffled (to mitigate sample-subject association) into 11,500 samples of 1 second each, sampled at 178 Hz. The raw dataset features 5 different classification labels corresponding to different status of the subject or location of measurement - eyes open, eyes closed, EEG measured in healthy brain region, EEG measured where the tumor was located, and, finally, the subject experiencing seizure episode. To emphasize the distinction between positive and negative samples in terms of epilepsy, We merge the first 4 classes into one and each time series sample has a binary label describing if the associated subject is experiencing seizure or not. There are 11,500 EEG samples in total. To evaluate the performance of pre-trained model on small fine-tuning dataset, we choose a tiny set (60 samples; 30 samples for each class) for fine-tuning and assess the model with a validation set (20 samples; 10 sample for each class). The model with best validation performance is use to make prediction on test set (the remaining 11,420 samples). The [raw dataset](https://repositori.upf.edu/handle/10230/42894) is distributed under the Creative Commons License (CC-BY) 4.0.
 
-(3), (4). **FD-A** and **FD-B** are subsets taken from the **FD** dataset, which is gathered from an electromechanical drive system that monitors the condition of rolling bearings and detects damages in them. There are four subsets of data collected under various conditions, whose parameters include rotational speed, load torque, and radial force. Each rolling bearing can be undamaged, inner damaged, and outer damaged, which leads to three classes in total. We denote the subsets corresponding to condition A and condition B as Faulty Detection Condition A (**FD-A**) and Faulty Detection Condition B (**FD-B**) , respectively. Each original recording has a single channel with sampling frequency of 64k Hz and lasts 4 seconds. To deal with the long duration, we follow the procedure described by Eldele et al., that is, we use sliding window length of 5,120 observations and a shifting length of either 1,024 or 4,096 to make the final number of samples relatively balanced between classes. The [raw dataset](https://mb.uni-paderborn.de/en/kat/main-research/datacenter/bearing-datacenter/data-sets-and-download) is distributed under the Creative Commons Attribution-Non Commercial 4.0 International License.
 
-(5). **HAR** contains recordings of 30 health volunteers performing six daily activities such as walking, walking upstairs, walking downstairs, sitting, standing, and laying. The prediction labels are the six activities. The wearable sensors on a smartphone measure triaxial linear acceleration and triaxial angular velocity at 50 Hz. After preprocessing and isolating out gravitational acceleration from body acceleration, there are nine channels in total. To line up the semantic domain with the channels in the dataset use during fine-tuning **Gesture** we only use the three channels of body linear accelerations. The [raw dataset](https://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones) is distributed AS-IS and no responsibility implied or explicit can be addressed to the authors or their institutions for its use or misuse. Any commercial use is prohibited.
 
-(6). **Gesture** contains accelerometer measurements of eight simple gestures that differed based on the paths of hand movement. The eight gestures are: hand swiping left, right, up, down, hand waving in a counterclockwise circle, or in clockwise circle, hand waving in a square, and waving a right arrow. The classification labels are those eight different types of gestures. The original paper reports inclusion of 4,480 gesture measurements, but through UCR Database we were only able to recover 440 measurements. The dataset is balanced with 55 samples each class and is of a suitable size for our purpose of fine-tuning experiments. Sampling frequency is not explicitly reported in the original paper but is presumably 100 Hz. The dataset uses three channels corresponding to three coordinate directions of linear acceleration. The [raw dataset](http://www.timeseriesclassification.com/description.php?Dataset=UWaveGestureLibrary) is publicly available.
-
-(7). **ECG** is taken as a subset from the 2017 PhysioNet Challenge that focuses on ECG recording classification. The single lead ECG measures four different underlying conditions of cardiac arrhythmias. More specifically, these classes correspond to the recordings of normal sinus rhythm, atrial fibrillation (AF), alternative rhythm, or others (too noisy to be classified). The recordings are sampled at 300 Hz. Furthermore, the dataset is imbalanced, with much fewer samples from the atrial fibrillation and noisy classes out of all four. To preprocess the dataset, we use the code from the CLOCS paper, which applied fixed-length window of 1,500 observations to divide up the long recordings into short samples of 5 seconds in duration that is still physiologically meaningful. The [raw dataset](https://physionet.org/content/challenge-2017/1.0.0/) is distributed under the Open Data Commons Attribution License v1.0.
-
-(8). Electromyograms (EMG) measures muscle responses as electrical activity to neural stimulation, and they can be used to diagnose certain muscular dystrophies and neuropathies. **EMG** consists of single-channel EMG recording from the tibialis anterior muscle of three volunteers that are healthy, suffering from neuropathy, and suffering from myopathy, respectively. The recordings are sampled with the frequency of 4K Hz. Each patient, i.e., their disorder, is a separate classification category. Then the recordings are split into time series samples using a fixed-length window of 1,500 observations. The [raw dataset](https://physionet.org/content/emgdb/1.0.0/) is distributed under the Open Data Commons Attribution License v1.0.
-
-The following table summarizes the statistics of all these eight datasets:
+The following table summarizes the statistics of all these three datasets:
 
 | Scenario # |              | Dataset      | # Samples    | # Channels | # Classes | Length | Freq (Hz) |
 | ---------- | ------------ | ------------ | ------------ | ---------- | --------- | ------ | --------- |
 | 1          | Pre-training | **SleepEEG** | 371,055      | 1          | 5         | 200    | 100       |
 |            | Fine-tuning  | **Epilepsy** | 60/20/11,420 | 1          | 2         | 178    | 174       |
-| 2          | Pre-training | **FD-A**     | 8,184        | 1          | 3         | 5,120  | 64K       |
-|            | Fine-tuning  | **FD-B**     | 60/21/13,559 | 1          | 3         | 5,120  | 64K       |
-| 3          | Pre-training | **HAR**      | 10,299       | 9          | 6         | 128    | 50        |
-|            | Fine-tuning  | **Gesture**  | 320/120/120  | 3          | 8         | 315    | 100       |
-| 4          | Pre-training | **ECG**      | 43,673       | 1          | 4         | 1,500  | 300       |
-|            | Fine-tuning  | **EMG**      | 122/41/41    | 1          | 3         | 1,500  | 4,000     |
 
 ### Processed data
 
