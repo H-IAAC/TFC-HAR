@@ -106,6 +106,8 @@ To fine tune this model use:
 
 There are some examples of options in the above commands. To see more options check up the main.py file.
 
+It is possible to generate latent spaces of saved models, but the code of tsne is not included on this repository.
+
 **Reproduce baselines** 
 To execute the baseline CNN supervised, just go `cd baselines/CNN-TFC/` and `python main.py`. The default configs are 1.0 of the dataset, 42 of batch size and 10 epochs, resulting in 96% of acuracy
 
