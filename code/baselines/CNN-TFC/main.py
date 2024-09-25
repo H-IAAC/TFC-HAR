@@ -312,10 +312,10 @@ y_test = y_test.astype(int)
 
 
 
-percentage = 0.01
+percentage = 1.0
 batch_size = 42
 epocas = int(40/percentage)
-epocas = 100
+epocas = 10
 
 print(f"epocas: {epocas}")
 
